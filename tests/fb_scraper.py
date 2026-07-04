@@ -1,5 +1,6 @@
-from fbref_scraper.get_teams import FbRefScraper as fb
+from fbref_scraper import FbRefScraper
 
-scraper = fb()
-df = scraper.get_match_report('Leicester', 'https://fbref.com/en/matches/a6cda14d/Leicester-City-Sunderland-August-8-2015-Premier-League')
-scraper.close() 
+fb = FbRefScraper()
+df = fb.get_matches('Leicester', "a2d435b3", "Premier League", "2015-2016")
+print(df)
+fb.close() 

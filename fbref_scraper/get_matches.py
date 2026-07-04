@@ -13,9 +13,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 
-def get_matches(
-    html: str, team: str, league: str, season: str
-) -> pd.DataFrame:
+def get_matches(html: str, team: str, league: str, season: str) -> pd.DataFrame:
     """Parse match report URLs and match metadata out of a rendered team
     season ("Scores & Fixtures") page.
 
@@ -26,8 +24,7 @@ def get_matches(
         https://fbref.com/en/squads/a2d435b3/2015-2016/Leicester-City-Stats).
     team : str
         Hyphenated team name as it appears in the fbref URL,
-        e.g. "Leicester-City". Used for naming the output CSV and
-        stamping a 'team' column.
+        e.g. "Leicester-City". Stamped as a 'team' column.
     league : str
         League name, e.g. "Premier League". This isn't present in the
         match row itself (the row's own "comp" cell reflects whichever
@@ -35,8 +32,7 @@ def get_matches(
         might be an FA Cup game even on a Premier League team's page),
         so it's passed in explicitly and stamped onto every row.
     season : str
-        e.g. "2015-2016". Used for naming the output CSV and stamping
-        a 'season' column.
+        e.g. "2015-2016". Stamped as a 'season' column.
 
     Returns
     -------
@@ -58,6 +54,10 @@ def get_matches(
         cell = row.find(attrs={"data-stat": data_stat})
         return cell.get_text(strip=True) if cell else None
 
+    s1 = re.findall(r'\d{2}(\d{2})', season)[0]
+    s2 = re.findall(r'\d{2}(\d{2})', season)[1]
+    s = s1+s2
+
     rows = []
     for cell in match_cells:
         link = cell.find("a", href=re.compile(r"/en/matches/\S+"))
@@ -77,7 +77,7 @@ def get_matches(
         rows.append(
             {
                 "league": league,
-                "season": season,
+                "season": s,
                 "team": team,
                 "match_date": _cell_text(row, "date"),
                 "comp": _cell_text(row, "comp"),

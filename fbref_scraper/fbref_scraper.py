@@ -8,9 +8,6 @@ rendered HTML, and delegates parsing to the get_teams / get_matches /
 get_match_report functions.
 """
 
-from playwright.sync_api import sync_playwright
-from seleniumbase import sb_cdp
-
 from .get_teams import get_teams
 from .get_matches import get_matches
 from .get_match_report import get_match_report
@@ -32,8 +29,20 @@ class FbRefScraper:
     -------
     >>> with FbRefScraper() as scraper:
     ...     teams = scraper.get_teams("Premier League", "2015-2016")
-    ...     matches = scraper.get_matches("Leicester-City", "a2d435b3", "2015-2016")
-    ...     stats = scraper.get_match_report(matches["match_report"].iloc[0], "Leicester City")
+    ...     matches = scraper.get_matches(
+    ...         "Leicester-City", "a2d435b3", "Premier League", "2015-2016"
+    ...     )
+    ...     row = matches.iloc[0]
+    ...     stats = scraper.get_match_report(
+    ...         row["match_report"],
+    ...         team_name="Leicester City",
+    ...         season=row["season"],
+    ...         match_date=row["match_date"],
+    ...         comp=row["comp"],
+    ...         opponent=row["opponent"],
+    ...         venue=row["venue"],
+    ...         match_id=row["match_id"],
+    ...     )
     """
 
     def __init__(self, headless: bool = False, wait_seconds: int = 10):
@@ -48,6 +57,12 @@ class FbRefScraper:
             load before reading page HTML. Individual methods may override
             this with a longer wait if needed.
         """
+        # Imported lazily so that importing fbref_scraper (e.g. to use the
+        # standalone get_teams/get_matches/get_match_report parsing
+        # functions directly, without a browser) doesn't require
+        # seleniumbase/playwright to be installed.
+        from seleniumbase import sb_cdp
+
         self.sb = sb_cdp.Chrome(use_chromium=True, headless=headless)
         self.endpoint_url = self.sb.get_endpoint_url()
         self.wait_seconds = wait_seconds
@@ -78,6 +93,8 @@ class FbRefScraper:
     def _get_page_html(self, url: str, wait_seconds: int = None) -> str:
         """Navigate to a URL via the shared CDP-connected browser and return
         the fully rendered page HTML."""
+        from playwright.sync_api import sync_playwright
+
         wait = wait_seconds if wait_seconds is not None else self.wait_seconds
         with sync_playwright() as p:
             browser = p.chromium.connect_over_cdp(self.endpoint_url)
@@ -106,13 +123,37 @@ class FbRefScraper:
         See fbref_scraper.get_matches.get_matches for details on the
         returned DataFrame."""
         url = f"https://fbref.com/en/squads/{teamid}/{season}/{team}-Stats"
- 
+
         html = self._get_page_html(url, wait_seconds=10)
         return get_matches(html, team=team, league=league, season=season)
 
-    def get_match_report(self, match_url: str, team_name: str):
+    def get_match_report(
+        self,
+        match_url: str,
+        team_name: str,
+        season: str,
+        match_date: str,
+        comp: str,
+        opponent: str,
+        venue: str,
+        match_id: str,
+    ):
         """Scrape a single team's player stats summary table from a match
-        report page. See fbref_scraper.get_match_report.get_match_report
-        for details on the returned DataFrame."""
+        report page, stamped with the given match metadata. See
+        fbref_scraper.get_match_report.get_match_report for details on the
+        returned DataFrame.
+
+        Note: season/match_date/comp/opponent/venue/match_id are typically
+        taken straight from the corresponding row of get_matches() output.
+        """
         html = self._get_page_html(match_url, wait_seconds=5)
-        return get_match_report(html, team_name=team_name)
+        return get_match_report(
+            html,
+            team_name=team_name,
+            season=season,
+            match_date=match_date,
+            comp=comp,
+            opponent=opponent,
+            venue=venue,
+            match_id=match_id,
+        )

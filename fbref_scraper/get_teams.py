@@ -22,11 +22,11 @@ def get_teams(html: str, league_slug: str, season: str) -> pd.DataFrame:
         Fully rendered page HTML (from a league standings page, e.g.
         https://fbref.com/en/comps/9/2015-2016/2015-2016-Premier-League-Stats).
     league_slug : str
-        Hyphenated league name, used only for naming the output CSV,
-        e.g. "Premier-League".
+        Hyphenated league name, e.g. "Premier-League". Currently unused
+        for column stamping but kept for symmetry with the URL-building
+        logic in FbRefScraper.get_teams.
     season : str
-        e.g. "2015-2016". Used for naming the output CSV and stamping
-        a 'season' column.
+        e.g. "2015-2016". Stamped as a 'season' column.
 
     Returns
     -------
@@ -59,6 +59,9 @@ def get_teams(html: str, league_slug: str, season: str) -> pd.DataFrame:
         rows.append({"squad_id": squad_id, "team_name": team_name})
 
     df = pd.DataFrame(rows).drop_duplicates().reset_index(drop=True)
-    df["season"] = season
+    s1 = re.findall(r'\d{2}(\d{2})', season)[0]
+    s2 = re.findall(r'\d{2}(\d{2})', season)[1]
+    s = s1+s2
+    df["season"] = s
 
     return df
