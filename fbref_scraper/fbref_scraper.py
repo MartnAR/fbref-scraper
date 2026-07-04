@@ -101,14 +101,14 @@ class FbRefScraper:
         html = self._get_page_html(url, wait_seconds=20)
         return get_teams(html, league_slug=league_slug, season=season)
 
-    def get_matches(self, team: str, teamid: str, season: str):
-        """Scrape match report URLs for a team's season. See
-        fbref_scraper.get_matches.get_matches for details on the returned
-        DataFrame."""
+    def get_matches(self, team: str, teamid: str, league: str, season: str):
+        """Scrape match report URLs and match metadata for a team's season.
+        See fbref_scraper.get_matches.get_matches for details on the
+        returned DataFrame."""
         url = f"https://fbref.com/en/squads/{teamid}/{season}/{team}-Stats"
-
+ 
         html = self._get_page_html(url, wait_seconds=10)
-        return get_matches(html, team=team, season=season)
+        return get_matches(html, team=team, league=league, season=season)
 
     def get_match_report(self, match_url: str, team_name: str):
         """Scrape a single team's player stats summary table from a match
