@@ -77,6 +77,14 @@ def get_match_report(
 
     df = pd.read_html(io.StringIO(str(target_table)))[0]
 
+    # fbref's header has two rows: a group row ("Performance") over most
+    # stat columns, and the actual stat names below it. pd.read_html keeps
+    # both as a MultiIndex (e.g. ("Performance", "Gls")). Flatten to just
+    # the real stat names (the bottom level) and drop the group labels
+    # and "Unnamed: N_level_0" placeholders entirely.
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(-1)
+
     df.insert(0, "team_name", team_name)
     df.insert(1, "season", shorten_season(season))
     df.insert(2, "match_date", match_date)
