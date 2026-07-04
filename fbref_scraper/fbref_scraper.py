@@ -90,7 +90,7 @@ class FbRefScraper:
 
     # -- public methods (thin wrappers: fetch HTML, delegate to get_*) ---
 
-    def get_teams(self, league: str, season: str, save_csv: bool = True):
+    def get_teams(self, league: str, season: str):
         """Scrape the list of squads for a league/season. See
         fbref_scraper.get_teams.get_teams for details on the returned
         DataFrame."""
@@ -99,20 +99,20 @@ class FbRefScraper:
         url = f"https://fbref.com/en/comps/{comp}/{season}/{season}-{league_slug}-Stats"
 
         html = self._get_page_html(url, wait_seconds=20)
-        return get_teams(html, league_slug=league_slug, season=season, save_csv=save_csv)
+        return get_teams(html, league_slug=league_slug, season=season)
 
-    def get_matches(self, team: str, teamid: str, season: str, save_csv: bool = True):
+    def get_matches(self, team: str, teamid: str, season: str):
         """Scrape match report URLs for a team's season. See
         fbref_scraper.get_matches.get_matches for details on the returned
         DataFrame."""
         url = f"https://fbref.com/en/squads/{teamid}/{season}/{team}-Stats"
 
         html = self._get_page_html(url, wait_seconds=10)
-        return get_matches(html, team=team, season=season, save_csv=save_csv)
+        return get_matches(html, team=team, season=season)
 
-    def get_match_report(self, match_url: str, team_name: str, save_csv: bool = True):
+    def get_match_report(self, match_url: str, team_name: str):
         """Scrape a single team's player stats summary table from a match
         report page. See fbref_scraper.get_match_report.get_match_report
         for details on the returned DataFrame."""
         html = self._get_page_html(match_url, wait_seconds=5)
-        return get_match_report(html, team_name=team_name, save_csv=save_csv)
+        return get_match_report(html, team_name=team_name)
