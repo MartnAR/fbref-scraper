@@ -1,4 +1,14 @@
-*.ipynb
-*.ipynb_checkpoint
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.env
+ 
+# scraped output CSVs (remove these lines if you want to commit sample data)
 *.csv
 *.xslx
+*.ipynb
+*.ipynb_checkpoint
