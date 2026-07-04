@@ -14,6 +14,8 @@ import re
 import pandas as pd
 from bs4 import BeautifulSoup
 
+from ._utils import shorten_season
+
 
 def get_match_report(
     html: str,
@@ -41,7 +43,9 @@ def get_match_report(
         Match metadata (typically taken from the corresponding row of
         get_matches() output) stamped onto every row of the returned
         table, so each player-stats row is fully labeled without needing
-        a separate join back to the schedule table.
+        a separate join back to the schedule table. `season` is stamped
+        in shortened form (e.g. "2526"); safe to pass either a full
+        "2025-2026" string or an already-shortened value.
 
     Returns
     -------
@@ -71,14 +75,10 @@ def get_match_report(
     if tfoot is not None:
         tfoot.decompose()
 
-    s1 = re.findall(r'\d{2}(\d{2})', season)[0]
-    s2 = re.findall(r'\d{2}(\d{2})', season)[1]
-    s = s1+s2
-
     df = pd.read_html(io.StringIO(str(target_table)))[0]
 
     df.insert(0, "team_name", team_name)
-    df.insert(1, "season", s)
+    df.insert(1, "season", shorten_season(season))
     df.insert(2, "match_date", match_date)
     df.insert(3, "comp", comp)
     df.insert(4, "opponent", opponent)

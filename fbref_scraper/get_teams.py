@@ -11,6 +11,8 @@ import re
 import pandas as pd
 from bs4 import BeautifulSoup
 
+from ._utils import shorten_season
+
 
 def get_teams(html: str, league_slug: str, season: str) -> pd.DataFrame:
     """Parse the list of squads (team name + fbref squad id) out of a
@@ -26,7 +28,8 @@ def get_teams(html: str, league_slug: str, season: str) -> pd.DataFrame:
         for column stamping but kept for symmetry with the URL-building
         logic in FbRefScraper.get_teams.
     season : str
-        e.g. "2015-2016". Stamped as a 'season' column.
+        Full season string, e.g. "2015-2016". Stamped as a 'season'
+        column in shortened form (e.g. "1516").
 
     Returns
     -------
@@ -59,9 +62,6 @@ def get_teams(html: str, league_slug: str, season: str) -> pd.DataFrame:
         rows.append({"squad_id": squad_id, "team_name": team_name})
 
     df = pd.DataFrame(rows).drop_duplicates().reset_index(drop=True)
-    s1 = re.findall(r'\d{2}(\d{2})', season)[0]
-    s2 = re.findall(r'\d{2}(\d{2})', season)[1]
-    s = s1+s2
-    df["season"] = s
+    df["season"] = shorten_season(season)
 
     return df

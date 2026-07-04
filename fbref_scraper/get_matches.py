@@ -12,6 +12,8 @@ import re
 import pandas as pd
 from bs4 import BeautifulSoup
 
+from ._utils import shorten_season
+
 
 def get_matches(html: str, team: str, league: str, season: str) -> pd.DataFrame:
     """Parse match report URLs and match metadata out of a rendered team
@@ -32,7 +34,8 @@ def get_matches(html: str, team: str, league: str, season: str) -> pd.DataFrame:
         might be an FA Cup game even on a Premier League team's page),
         so it's passed in explicitly and stamped onto every row.
     season : str
-        e.g. "2015-2016". Stamped as a 'season' column.
+        Full season string, e.g. "2015-2016". Stamped as a 'season'
+        column in shortened form (e.g. "1516").
 
     Returns
     -------
@@ -54,10 +57,6 @@ def get_matches(html: str, team: str, league: str, season: str) -> pd.DataFrame:
         cell = row.find(attrs={"data-stat": data_stat})
         return cell.get_text(strip=True) if cell else None
 
-    s1 = re.findall(r'\d{2}(\d{2})', season)[0]
-    s2 = re.findall(r'\d{2}(\d{2})', season)[1]
-    s = s1+s2
-
     rows = []
     for cell in match_cells:
         link = cell.find("a", href=re.compile(r"/en/matches/\S+"))
@@ -77,7 +76,7 @@ def get_matches(html: str, team: str, league: str, season: str) -> pd.DataFrame:
         rows.append(
             {
                 "league": league,
-                "season": s,
+                "season": shorten_season(season),
                 "team": team,
                 "match_date": _cell_text(row, "date"),
                 "comp": _cell_text(row, "comp"),
