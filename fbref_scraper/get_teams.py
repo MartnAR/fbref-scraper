@@ -63,5 +63,6 @@ def get_teams(html: str, league_slug: str, season: str) -> pd.DataFrame:
 
     df = pd.DataFrame(rows).drop_duplicates().reset_index(drop=True)
     df["season"] = shorten_season(season)
+    df["league"] = league_slug
 
     return df

@@ -45,7 +45,7 @@ class FbRefScraper:
     ...     )
     """
 
-    def __init__(self, headless: bool = False, wait_seconds: int = 10):
+    def __init__(self, headless: bool = False, wait_seconds: int = 60):
         """
         Parameters
         ----------
@@ -90,9 +90,7 @@ class FbRefScraper:
 
     # -- internal helper --------------------------------------------------
 
-    def _get_page_html(self, url: str, wait_seconds: int = None) -> str:
-        """Navigate to a URL via the shared CDP-connected browser and return
-        the fully rendered page HTML."""
+    def _get_page_html(self, url: str, wait_seconds: int = 60) -> str:
         from playwright.sync_api import sync_playwright
 
         wait = wait_seconds if wait_seconds is not None else self.wait_seconds
@@ -100,7 +98,10 @@ class FbRefScraper:
             browser = p.chromium.connect_over_cdp(self.endpoint_url)
             context = browser.contexts[0]
             page = context.pages[0]
-            page.goto(url)
+            try:
+                page.goto(url, wait_until="commit", timeout=wait * 1000)
+            except Exception as e:
+                print(f"Warning: goto() didn't resolve cleanly ({e}); continuing anyway")
             self.sb.sleep(wait)
             html = page.content()
         return html
@@ -115,7 +116,7 @@ class FbRefScraper:
         league_slug = league.replace(" ", "-")
         url = f"https://fbref.com/en/comps/{comp}/{season}/{season}-{league_slug}-Stats"
 
-        html = self._get_page_html(url, wait_seconds=20)
+        html = self._get_page_html(url, wait_seconds=60)
         return get_teams(html, league_slug=league_slug, season=season)
 
     def get_matches(self, team: str, teamid: str, league: str, season: str):
@@ -123,8 +124,9 @@ class FbRefScraper:
         See fbref_scraper.get_matches.get_matches for details on the
         returned DataFrame."""
         url = f"https://fbref.com/en/squads/{teamid}/{season}/{team}-Stats"
+        url = url.replace(' ', '-')
 
-        html = self._get_page_html(url, wait_seconds=10)
+        html = self._get_page_html(url, wait_seconds=30)
         return get_matches(html, team=team, league=league, season=season)
 
     def get_match_report(

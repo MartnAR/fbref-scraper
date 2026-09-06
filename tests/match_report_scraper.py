@@ -1,0 +1,55 @@
+from fbref_scraper import FbRefScraper
+import pandas as pd
+import time
+from pathlib import Path 
+import os
+
+# Load scraper
+fb = FbRefScraper()
+
+# Load match data
+matches = pd.read_csv("epl_matches_2019_2025_updated.csv")
+
+# Obtain unique team, season values
+team_season = matches[["team", "season"]].drop_duplicates(
+    subset=["team", "season"]).values.tolist()
+
+matches["team_game_id"] = matches["team"] + "-" + matches["match_id"]
+
+for i, j in team_season: 
+    # Create folder for each season
+    folder = f"epl/season_{j}/{i}"
+    Path(folder).mkdir(parents=True, exist_ok=True)
+
+    desc = matches[(matches["team"]==i) & (matches["season"]==j)].reset_index()
+    for d in range(len(desc)):
+
+        comp = desc.loc[d, "comp"].lower().replace(" ", "_")
+        opponent = desc.loc[d, "opponent"].lower().replace(" ", "_")
+        date = desc.loc[d, "match_date"]
+        team_game_id = desc.loc[d, "team_game_id"]
+
+        mr = fb.get_match_report(
+            match_url=desc.loc[d, 'match_report'],
+            team_name=desc.loc[d, 'team'],
+            season=desc.loc[d, 'season'].astype(str),
+            match_date=desc.loc[d, 'match_date'],
+            comp=desc.loc[d, 'comp'],
+            opponent=desc.loc[d, 'opponent'],
+            venue=desc.loc[d, 'venue'],
+            match_id=desc.loc[d, 'match_id']
+        )
+
+        if opponent=='nobodø/glimt':
+            mr.to_csv(f"{folder}/{comp}_nobodoglimt_{date}.csv")
+        else:
+            mr.to_csv(f"{folder}/{comp}_{opponent}_{date}.csv")
+
+        matches = matches[(matches["team_game_id"]!=team_game_id)]
+
+        matches.to_csv("epl_matches_2019_2025_updated.csv", index=False)
+
+# print(mr)
+# mr.to_csv("liverpool_2425_match_report_first_game.csv")
+
+# fb.close()
