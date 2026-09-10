@@ -1,14 +1,12 @@
 from fbref_scraper import FbRefScraper
 import pandas as pd
-import time
-from pathlib import Path 
-import os
+from pathlib import Path
 
 # Load scraper
 fb = FbRefScraper()
 
 # Load match data
-matches = pd.read_csv("epl_matches_2019_2025_updated.csv")
+matches = pd.read_csv("lef_matches_2019_2025_updated.csv")
 
 # Obtain unique team, season values
 team_season = matches[["team", "season"]].drop_duplicates(
@@ -18,7 +16,7 @@ matches["team_game_id"] = matches["team"] + "-" + matches["match_id"]
 
 for i, j in team_season: 
     # Create folder for each season
-    folder = f"epl/season_{j}/{i}"
+    folder = f"lef/season_{j}/{i}"
     Path(folder).mkdir(parents=True, exist_ok=True)
 
     desc = matches[(matches["team"]==i) & (matches["season"]==j)].reset_index()
@@ -40,6 +38,8 @@ for i, j in team_season:
             match_id=desc.loc[d, 'match_id']
         )
 
+        # Bodø/Glimt having a forward slash in the name creates an escape clause situation. 
+        # Code should be debugged at some point to clear any symbols and replace with _
         if opponent=='nobodø/glimt':
             mr.to_csv(f"{folder}/{comp}_nobodoglimt_{date}.csv")
         else:
@@ -47,9 +47,6 @@ for i, j in team_season:
 
         matches = matches[(matches["team_game_id"]!=team_game_id)]
 
-        matches.to_csv("epl_matches_2019_2025_updated.csv", index=False)
-
-# print(mr)
-# mr.to_csv("liverpool_2425_match_report_first_game.csv")
-
-# fb.close()
+        # Want to update list of matches that have yet to be scraped in case 
+        # fbref/scraper crash. This way, user doesn't have to restart from 0. 
+        matches.to_csv("lef_matches_2019_2025_updated.csv", index=False)
